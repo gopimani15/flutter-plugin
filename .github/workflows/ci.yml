@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm test
+      - name: Check the bundled engine is up to date
+        run: |
+          npm run build
+          git diff --exit-code -- ../eyewear_tryon_web/assets/tryon.js
+
+  dart:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package:
+          - eyewear_tryon_platform_interface
+          - eyewear_tryon_web
+          - eyewear_tryon
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: if [ -d test ]; then flutter test; fi
+      - name: Publish dry run (warns about local overrides until siblings are on pub.dev)
+        run: flutter pub publish --dry-run
+        continue-on-error: true
+
+  example-web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: eyewear_tryon/example
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter create --platforms=web .
+      - run: flutter build web

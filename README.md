@@ -13,7 +13,7 @@ Source for the [`eyewear_tryon`](eyewear_tryon/) Flutter plugin: virtual glasses
 
 ## Development
 
-Each package has a `pubspec_overrides.yaml` that points its sibling dependencies at this repo, so local changes are picked up without publishing. These files are excluded from published packages (`.pubignore`).
+Run `tool/dev_setup.sh` once after cloning. It writes a `pubspec_overrides.yaml` in each package that points sibling dependencies at this repo, so local changes are picked up without publishing. Those files are not tracked by git and are never published.
 
 ```bash
 # engine
@@ -34,4 +34,4 @@ Packages depend on each other through pub.dev, so publish in this order and bump
 2. `eyewear_tryon_web`, `eyewear_tryon_android`, `eyewear_tryon_ios`
 3. `eyewear_tryon`
 
-`tool/publish.sh` runs a dry run for every package in that order; `tool/publish.sh --publish` publishes them.
+`tool/publish.sh` runs a dry run for every package in that order; `tool/publish.sh --publish` publishes them, answering pub's confirmation for each. If it stops part-way, resume with `tool/publish.sh --publish --from <package>`.

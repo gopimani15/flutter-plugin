@@ -2,6 +2,7 @@
 # Dry-runs (default) or publishes every package in dependency order.
 #   tool/publish.sh            # validate all packages, publish nothing
 #   tool/publish.sh --publish  # publish for real (asks for confirmation per package)
+#   tool/publish.sh --publish --from eyewear_tryon_web   # resume after a stop
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -12,6 +13,13 @@ ORDER=(
   eyewear_tryon_ios
   eyewear_tryon
 )
+
+FROM="${3:-}"
+[[ "${2:-}" == "--from" && -n "$FROM" ]] || FROM=""
+if [[ -n "$FROM" ]]; then
+  for i in "${!ORDER[@]}"; do [[ "${ORDER[$i]}" == "$FROM" ]] && ORDER=("${ORDER[@]:$i}") && break; done
+  [[ "${ORDER[0]}" == "$FROM" ]] || { echo "Unknown package: $FROM"; exit 1; }
+fi
 
 if [[ "${1:-}" == "--publish" ]]; then
   echo "Publishing is permanent: a version can't be deleted from pub.dev."
