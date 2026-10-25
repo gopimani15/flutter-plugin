@@ -25,6 +25,8 @@ class FrameSpec {
     this.frontImageUrl,
     this.frontImageLensCenterY = 0.5,
     this.removeBackground,
+    this.removePhotoTemples = true,
+    this.showTemples = true,
     this.thumbnailUrl,
     this.productUrl,
     this.price,
@@ -71,6 +73,16 @@ class FrameSpec {
   /// only when the photo has no transparency). Set false for white frames.
   final bool? removeBackground;
 
+  /// Clear the temple arms a front photo shows through its lenses — on a
+  /// face they are behind the head. Clear lenses lose the arm outright;
+  /// tinted lenses have it painted over in the tint. On by default; set false
+  /// for a photo whose lens area should be drawn exactly as shot.
+  final bool removePhotoTemples;
+
+  /// Draw the temple arms. False draws the frame front only: no arms for a
+  /// photo or measurements frame, and a GLB's nodes named "temple" hidden.
+  final bool showTemples;
+
   /// Catalogue display fields (not used for rendering).
   final String? thumbnailUrl;
   final String? productUrl;
@@ -112,6 +124,8 @@ class FrameSpec {
         'frontImageUrl': frontImageUrl,
         'frontImageLensCenterY': frontImageLensCenterY,
         'removeBackground': removeBackground,
+        'removePhotoTemples': removePhotoTemples,
+        'showTemples': showTemples,
         'thumbnailUrl': thumbnailUrl,
         'productUrl': productUrl,
         'price': price,
@@ -136,6 +150,8 @@ class FrameSpec {
         frontImageUrl: j['frontImageUrl'] as String?,
         frontImageLensCenterY: (j['frontImageLensCenterY'] as num?)?.toDouble() ?? 0.5,
         removeBackground: j['removeBackground'] as bool?,
+        removePhotoTemples: j['removePhotoTemples'] as bool? ?? true,
+        showTemples: j['showTemples'] as bool? ?? true,
         thumbnailUrl: j['thumbnailUrl'] as String?,
         productUrl: j['productUrl'] as String?,
         price: j['price'] as String?,

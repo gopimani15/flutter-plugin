@@ -6,6 +6,10 @@
 //   temples run toward -Z
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { clearTemplesInLenses, paintTemplesInTintedLenses } from './photo_temples.js';
+
+/** Whether the frame is drawn with its temple arms (spec.showTemples, default true). */
+const showsTemples = (spec) => spec.showTemples !== false;
 
 /** Frame geometry derived from the spec; every field is used. */
 export function frameLayout(spec) {
@@ -102,7 +106,7 @@ export function buildProceduralGlasses(spec) {
     ep.position.set(side * (L.halfW - epLen / 2), hingeY, -0.4);
     g.add(ep);
 
-    g.add(buildTemple(L, frameMat, side, hingeY));
+    if (showsTemples(spec)) g.add(buildTemple(L, frameMat, side, hingeY));
 
     // Nose pad.
     const pad = new THREE.Mesh(new THREE.SphereGeometry(1.6, 12, 8), lensMat.clone());
@@ -202,6 +206,12 @@ export async function loadFrontImageGlasses(spec) {
   const keyWhite = spec.removeBackground ?? !hasTransparency(data.data);
   const { box, edgeColor } = keyAndTrim(data.data, w, h, { keyWhite });
   if (!box) throw new Error('Frame photo is empty after background removal');
+  // The photo's own arms, seen through the lenses, would sit on the frame
+  // front; on a face they are behind the head.
+  if (spec.removePhotoTemples !== false) {
+    clearTemplesInLenses(data.data, w, h);
+    paintTemplesInTintedLenses(data.data, w, h, box);
+  }
   ctx.putImageData(data, 0, 0);
   const cw = box.x1 - box.x0 + 1;
   const ch = box.y1 - box.y0 + 1;
@@ -226,11 +236,13 @@ export async function loadFrontImageGlasses(spec) {
   const g = new THREE.Group();
   g.name = 'glasses';
   g.add(plane);
-  const templeMat = new THREE.MeshStandardMaterial({
-    color: new THREE.Color(spec.frameColor ?? edgeColor ?? '#1c1c1e'), metalness: 0.3, roughness: 0.45,
-  });
-  const hingeY = plane.position.y + planeH * 0.22;
-  for (const side of [-1, 1]) g.add(buildTemple(L, templeMat, side, hingeY));
+  if (showsTemples(spec)) {
+    const templeMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(spec.frameColor ?? edgeColor ?? '#1c1c1e'), metalness: 0.3, roughness: 0.45,
+    });
+    const hingeY = plane.position.y + planeH * 0.22;
+    for (const side of [-1, 1]) g.add(buildTemple(L, templeMat, side, hingeY));
+  }
   g.userData.layout = L;
   g.userData.source = 'photo';
   return g;
@@ -274,6 +286,12 @@ export async function loadGlbGlasses(spec) {
   });
   const cy = frontSlice.isEmpty() ? (b2.min.y + b2.max.y) / 2 : (frontSlice.min.y + frontSlice.max.y) / 2;
   model.position.sub(new THREE.Vector3((b2.min.x + b2.max.x) / 2, cy, b2.max.z - 1));
+  // A GLB's arms are whatever its author named "temple".
+  if (!showsTemples(spec)) {
+    model.traverse((o) => {
+      if (/temple/i.test(o.name)) o.visible = false;
+    });
+  }
   const g = new THREE.Group();
   g.name = 'glasses';
   g.add(inner);

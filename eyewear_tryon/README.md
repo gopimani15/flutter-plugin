@@ -74,6 +74,8 @@ Each frame renders from the best asset it has: **3D model** (`modelUrl`, GLB) â†
 
 Front photos: use a transparent PNG, or a plain white background, which is removed automatically (clear lenses become see-through too). The photo is cropped to the frame and its width is mapped to `totalWidth`. Set `removeBackground: false` for white frames, and `frontImageLensCenterY` if the lens centre isn't at mid-height.
 
+Temple arms: a front photo shows the arms running back through the lenses; they are cleared automatically (taken out of clear lenses, painted over in the tint of tinted ones). `removePhotoTemples: false` keeps the photo as shot. Arms are then drawn from the measurements and hidden behind the head; `showTemples: false` draws the frame front only.
+
 ```dart
 // Your API (JSON format documented on JsonFrameCatalog; use `mapper` for other field names)
 final frames = await JsonFrameCatalog(Uri.parse('https://api.example.com/frames')).load();

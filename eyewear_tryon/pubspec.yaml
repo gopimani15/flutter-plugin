@@ -1,6 +1,6 @@
 name: eyewear_tryon
 description: "Virtual glasses try-on for Flutter with real-world sizing: PD measurement, frames drawn at true size from measurements, photos or 3D models, and a fit score."
-version: 0.1.0
+version: 0.1.1
 homepage: https://github.com/gopimani15/flutter-plugin
 repository: https://github.com/gopimani15/flutter-plugin/tree/main/eyewear_tryon
 issue_tracker: https://github.com/gopimani15/flutter-plugin/issues
@@ -29,10 +29,10 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^1.2.0
-  eyewear_tryon_platform_interface: ^0.1.0
+  eyewear_tryon_platform_interface: ^0.1.1
   eyewear_tryon_android: ^0.1.0
   eyewear_tryon_ios: ^0.1.0
-  eyewear_tryon_web: ^0.1.0
+  eyewear_tryon_web: ^0.1.1
 
 dev_dependencies:
   flutter_test:

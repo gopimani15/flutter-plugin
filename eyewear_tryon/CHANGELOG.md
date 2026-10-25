@@ -1,3 +1,7 @@
+## 0.1.1
+
+* Temple arms: `FrameSpec.showTemples` to draw the frame front only, and front photos now have the arms seen through their lenses cleared (`FrameSpec.removePhotoTemples`, on by default).
+
 ## 0.1.0
 
 * Initial preview release.
