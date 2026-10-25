@@ -1,0 +1,20 @@
+name: eyewear_tryon_platform_interface
+description: "A common platform interface for the eyewear_tryon plugin: frame specs, face measurements, events and the default method-channel implementation."
+version: 0.1.0
+homepage: https://github.com/gopimani15/flutter-plugin
+repository: https://github.com/gopimani15/flutter-plugin/tree/main/eyewear_tryon_platform_interface
+issue_tracker: https://github.com/gopimani15/flutter-plugin/issues
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  plugin_platform_interface: ^2.1.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0

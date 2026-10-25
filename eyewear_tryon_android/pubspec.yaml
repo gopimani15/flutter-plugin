@@ -1,0 +1,24 @@
+name: eyewear_tryon_android
+description: "Android implementation of eyewear_tryon (preview: platform view and channels are wired; the camera renderer is in progress)."
+version: 0.1.0
+homepage: https://github.com/gopimani15/flutter-plugin
+repository: https://github.com/gopimani15/flutter-plugin/tree/main/eyewear_tryon_android
+issue_tracker: https://github.com/gopimani15/flutter-plugin/issues
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+flutter:
+  plugin:
+    implements: eyewear_tryon
+    platforms:
+      android:
+        package: dev.eyeweartryon.android
+        pluginClass: GlassesTryOnPlugin
+        dartPluginClass: GlassesTryOnAndroid
+
+dependencies:
+  flutter:
+    sdk: flutter
+  eyewear_tryon_platform_interface: ^0.1.0

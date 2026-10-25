@@ -1,0 +1,33 @@
+name: eyewear_tryon_web
+description: "Web implementation of eyewear_tryon, using MediaPipe Face Landmarker and three.js for live and photo glasses try-on."
+version: 0.1.0
+homepage: https://github.com/gopimani15/flutter-plugin
+repository: https://github.com/gopimani15/flutter-plugin/tree/main/eyewear_tryon_web
+issue_tracker: https://github.com/gopimani15/flutter-plugin/issues
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+flutter:
+  plugin:
+    implements: eyewear_tryon
+    platforms:
+      web:
+        pluginClass: GlassesTryOnWeb
+        fileName: eyewear_tryon_web.dart
+  assets:
+    - assets/tryon.js
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
+  eyewear_tryon_platform_interface: ^0.1.0
+  web: ^1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0

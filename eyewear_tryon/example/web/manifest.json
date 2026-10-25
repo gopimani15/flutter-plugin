@@ -1,0 +1,9 @@
+{
+  "name": "Glasses Try-On",
+  "short_name": "Try-On",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2F5D62",
+  "icons": []
+}

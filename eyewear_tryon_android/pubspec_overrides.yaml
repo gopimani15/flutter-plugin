@@ -1,0 +1,5 @@
+# Local development only: use the packages in this repo instead of pub.dev.
+# Excluded from publishing (.pubignore).
+dependency_overrides:
+  eyewear_tryon_platform_interface:
+    path: ../eyewear_tryon_platform_interface

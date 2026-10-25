@@ -1,0 +1,38 @@
+<!doctype html>
+<!-- Engine-only test page (no Flutter). From the repo root:
+     python3 -m http.server 8080  ->  http://localhost:8080/engine/demo.html -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Try-On Engine</title>
+  <style>
+    body { margin: 0; font: 14px system-ui, sans-serif; background: #111; color: #eee; }
+    #view { width: 100vw; height: 75vh; }
+    #out { padding: 12px; white-space: pre; font-family: ui-monospace, monospace; }
+  </style>
+</head>
+<body>
+  <div id="view"></div>
+  <div id="out">starting…</div>
+  <script src="../eyewear_tryon_web/assets/tryon.js"></script>
+  <script>
+    const out = document.getElementById('out');
+    GlassesTryOn.create(1, document.getElementById('view'), JSON.stringify({
+      debug: true,
+      frame: { id: 'sample', lensWidth: 52, bridgeWidth: 18, lensHeight: 40, frameHeight: 45,
+               templeLength: 145, totalWidth: 138, frameColor: '#b08d57', metallic: true },
+    }), (json) => {
+      const e = JSON.parse(json);
+      if (e.type === 'measurements') {
+        out.textContent = ['pd', 'monoPdRight', 'monoPdLeft', 'faceWidth', 'noseBridge', 'frontToEar', 'confidence', 'yaw']
+          .map((k) => `${k.padEnd(11)} ${Number(e[k]).toFixed(1)}`).join('\n')
+          + (e.locked ? '\nLOCKED' : `\nspread ${Number(e.pdSpread).toFixed(2)} mm`);
+      } else {
+        console.log(e);
+        if (e.type === 'error') out.textContent = e.message;
+      }
+    });
+  </script>
+</body>
+</html>
