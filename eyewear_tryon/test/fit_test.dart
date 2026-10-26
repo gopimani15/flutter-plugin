@@ -75,7 +75,7 @@ void main() {
   });
 
   test('locked PD and mono PD are parsed from engine events', () {
-    final m = FaceMeasurements.fromJson({
+    final m = FaceMeasurements.fromJson(const {
       'pd': 62.4, 'monoPdRight': 31.5, 'monoPdLeft': 30.9, 'faceWidth': 136,
       'noseBridge': 17, 'frontToEar': 108, 'confidence': 1, 'locked': true,
     });
