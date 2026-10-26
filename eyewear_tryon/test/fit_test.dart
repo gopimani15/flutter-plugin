@@ -87,4 +87,14 @@ void main() {
   test('FrameSpec json round-trips', () {
     expect(FrameSpec.fromJson(frame.toJson()), frame);
   });
+
+  test('TryOnConfig passes the distance-PD settings to the engine', () {
+    expect(const TryOnConfig().toJson(), allOf(
+      containsPair('eyeRotationMm', 11),
+      containsPair('cameraDiagonalFovDeg', 75),
+    ));
+    final json = const TryOnConfig(eyeRotationMm: 0, cameraDiagonalFovDeg: 80).toJson();
+    expect(json['eyeRotationMm'], 0);
+    expect(json['cameraDiagonalFovDeg'], 80);
+  });
 }

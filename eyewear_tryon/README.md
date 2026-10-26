@@ -37,6 +37,8 @@ A person's PD doesn't change, so once 45 frontal samples agree (spread ≤ 0.6 m
 
 **Metric scale.** On web and Android the scale comes from the iris (visible iris ≈ 11.7 mm, so mm/px = 11.7 / iris px). The engine then locks onto the median PD for a stable render scale. A manual PD (`setManualPd`) overrides both and is the most accurate option.
 
+**Distance PD (web).** Looking at the screen turns the eyes in, so the camera sees a near PD 2-3 mm smaller than the distance PD on a prescription. The engine estimates the viewing distance from the iris and the camera's field of view, and reports the distance PD: near × (d + `eyeRotationMm`) / d. `TryOnConfig(eyeRotationMm: 11, cameraDiagonalFovDeg: 75)` are the defaults; `eyeRotationMm: 0` reports the near PD. A manual PD is taken as a distance PD.
+
 **Placement.** The bridge centre of the frame sits at the midpoint between the pupils. It is pushed forward by the vertex distance (12 mm), dropped 2 mm so the pupils sit slightly above the lens centre, and tilted 8° pantoscopic. A depth-only head ellipsoid hides the temples behind the head.
 
 ## Usage

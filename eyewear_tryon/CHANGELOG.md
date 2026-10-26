@@ -1,3 +1,7 @@
+## 0.1.3
+
+* `TryOnConfig.eyeRotationMm` and `TryOnConfig.cameraDiagonalFovDeg` (web) tune the distance-PD correction; `eyeRotationMm: 0` reports the near PD (eyewear_tryon_platform_interface 0.1.2). README: distance PD.
+
 ## 0.1.2
 
 * Web: PD is now the distance PD a prescription states, not the near PD the camera sees while you look at the screen, which read 2-3 mm low (eyewear_tryon_web 0.1.2).

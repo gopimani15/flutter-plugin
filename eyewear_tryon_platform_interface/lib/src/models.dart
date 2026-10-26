@@ -178,6 +178,8 @@ class TryOnConfig {
     this.useCamera = true,
     this.manualPdMm,
     this.irisDiameterMm = 11.7,
+    this.eyeRotationMm = 11,
+    this.cameraDiagonalFovDeg = 75,
     this.vertexDistanceMm = 12,
     this.pupilAboveLensCenterMm = 2,
     this.pantoscopicTiltDeg = 8,
@@ -201,6 +203,16 @@ class TryOnConfig {
 
   /// Horizontal visible iris diameter used as a ruler on monocular cameras.
   final double irisDiameterMm;
+
+  /// Web only: entrance pupil to the eye's centre of rotation. Eyes looking
+  /// at the screen turn in, so the camera sees a near PD; the reported PD is
+  /// corrected to the distance PD by (d + this) / d, d the viewing distance.
+  /// 0 reports the near PD as seen.
+  final double eyeRotationMm;
+
+  /// Web only: the camera's diagonal field of view, from which the viewing
+  /// distance for [eyeRotationMm] is estimated. Phones ~80, webcams ~70-78.
+  final double cameraDiagonalFovDeg;
   final double vertexDistanceMm;
   final double pupilAboveLensCenterMm;
   final double pantoscopicTiltDeg;
@@ -225,6 +237,8 @@ class TryOnConfig {
         'source': useCamera ? 'camera' : 'image',
         'manualPdMm': manualPdMm ?? 0,
         'irisDiameterMm': irisDiameterMm,
+        'eyeRotationMm': eyeRotationMm,
+        'cameraDiagonalFovDeg': cameraDiagonalFovDeg,
         'vertexDistanceMm': vertexDistanceMm,
         'pupilAboveLensCenterMm': pupilAboveLensCenterMm,
         'pantoscopicTiltDeg': pantoscopicTiltDeg,
