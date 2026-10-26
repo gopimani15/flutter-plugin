@@ -1,6 +1,6 @@
 name: eyewear_tryon_web
 description: "Web implementation of eyewear_tryon, using MediaPipe Face Landmarker and three.js for live and photo glasses try-on."
-version: 0.1.1
+version: 0.1.2
 homepage: https://github.com/gopimani15/flutter-plugin
 repository: https://github.com/gopimani15/flutter-plugin/tree/main/eyewear_tryon_web
 issue_tracker: https://github.com/gopimani15/flutter-plugin/issues
