@@ -3,9 +3,10 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import {
-  LM, DEFAULT_IRIS_MM, toScene, headBasis, headAngles, irisDiameterPx,
-  pupilDistancePx, measureFrame, glassesPlacement, MeasurementAggregator,
-  VecFilter, OneEuro,
+  LM, DEFAULT_IRIS_MM, DEFAULT_CAMERA_DIAG_FOV_DEG, DEFAULT_EYE_ROTATION_MM,
+  toScene, headBasis, headAngles, irisDiameterPx, pupilDistancePx,
+  viewingDistanceMm, convergenceFactor, measureFrame, glassesPlacement,
+  MeasurementAggregator, VecFilter, OneEuro,
 } from './geometry.js';
 import { buildGlasses, disposeObject } from './glasses.js';
 
@@ -17,6 +18,10 @@ export const DEFAULTS = {
   delegate: 'GPU',
   mirror: true,
   irisDiameterMm: DEFAULT_IRIS_MM,
+  // Distance PD from the near PD seen while looking at the screen; the
+  // distance comes from the iris and this field of view. 0 rotation = off.
+  cameraDiagonalFovDeg: DEFAULT_CAMERA_DIAG_FOV_DEG,
+  eyeRotationMm: DEFAULT_EYE_ROTATION_MM,
   vertexDistanceMm: 12,
   pupilAboveLensCenterMm: 2,
   pantoscopicTiltDeg: 8,
@@ -328,12 +333,12 @@ export class TryOnSession {
     this.noFaceReported = false;
     this.photoMisses = 0;
     this.faceVisible = true;
-    this._update(lms.map((p) => toScene(p, W, H)), now / 1000);
+    this._update(lms.map((p) => toScene(p, W, H)), now / 1000, W, H);
     this.renderer.render(this.scene, this.camera);
     if (this.dbg) this._drawDebug(lms, W, H);
   }
 
-  _update(P, t) {
+  _update(P, t, W, H) {
     const basis = headBasis(P);
     const ang = headAngles(basis);
     const eyePx = pupilDistancePx(P);
@@ -341,12 +346,22 @@ export class TryOnSession {
     // Metric scale: manual PD is most accurate; otherwise iris ruler for the
     // measurements and the stabilised median PD for rendering.
     const irisMmPerPx = this.cfg.irisDiameterMm / irisDiameterPx(P);
-    const mmPerPx = this.cfg.manualPdMm > 0 ? this.cfg.manualPdMm / eyePx : irisMmPerPx;
+    // The camera sees the near PD; reported PDs are distance PDs. A manual
+    // PD is a distance PD, so it is taken back to near before scaling.
+    const convergence = convergenceFactor(
+      viewingDistanceMm(irisMmPerPx, W, H, this.cfg.cameraDiagonalFovDeg),
+      this.cfg.eyeRotationMm,
+    );
+    const mmPerPx = this.cfg.manualPdMm > 0
+      ? this.cfg.manualPdMm / (eyePx * convergence) : irisMmPerPx;
 
     const frontal = Math.abs(ang.yaw) < this.cfg.maxMeasureYawDeg
       && Math.abs(ang.pitch) < this.cfg.maxMeasurePitchDeg;
     if (frontal && !this.locked) {
-      this.agg.push(measureFrame(P, basis, mmPerPx, { earOffsetMm: this.cfg.earOffsetMm }));
+      this.agg.push(measureFrame(P, basis, mmPerPx, {
+        earOffsetMm: this.cfg.earOffsetMm,
+        convergence,
+      }));
       if (this.cfg.lockMeasurements
         && this.agg.isStable(this.cfg.lockMinSamples, this.cfg.lockMaxPdSpreadMm)) {
         this.locked = this.agg.result();
@@ -357,9 +372,10 @@ export class TryOnSession {
     const agg = this.locked ?? this.agg.result();
 
     // Render scale: PD is fixed for the person, so once known (manual, locked
-    // or a settled median) the frame size no longer drifts.
-    const pdMm = this.cfg.manualPdMm > 0 ? this.cfg.manualPdMm
-      : (agg.samples >= 10 ? agg.pd : eyePx * irisMmPerPx);
+    // or a settled median) the frame size no longer drifts. Drawn at the near
+    // PD, the one the camera sees.
+    const pdMm = this.cfg.manualPdMm > 0 ? this.cfg.manualPdMm / convergence
+      : (agg.samples >= 10 ? agg.nearPd : eyePx * irisMmPerPx);
     const pxPerMm = this.scaleF.filter(eyePx / pdMm, t);
 
     // Smooth pose (position + two axes, re-orthonormalised).

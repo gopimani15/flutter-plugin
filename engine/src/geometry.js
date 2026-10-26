@@ -28,6 +28,12 @@ export const LM = Object.freeze({
 /** Average adult horizontal visible iris diameter (mm). */
 export const DEFAULT_IRIS_MM = 11.7;
 
+/** Diagonal field of view of a typical front camera (deg): phones ~80, webcams ~70-78. */
+export const DEFAULT_CAMERA_DIAG_FOV_DEG = 75;
+
+/** Entrance pupil to the eye's centre of rotation (mm). */
+export const DEFAULT_EYE_ROTATION_MM = 11;
+
 export function toScene(lm, W, H) {
   return [lm.x * W, -lm.y * H, -(lm.z ?? 0) * W];
 }
@@ -98,20 +104,45 @@ export function pupilDistancePx(P) {
 }
 
 /**
+ * Camera-to-eyes distance (mm), from the metric scale at the eyes and the
+ * camera's (assumed) field of view. Rough, but only feeds a small correction.
+ */
+export function viewingDistanceMm(mmPerPx, W, H, diagFovDeg = DEFAULT_CAMERA_DIAG_FOV_DEG) {
+  const focalPx = Math.hypot(W, H) / 2 / Math.tan((diagFovDeg * Math.PI) / 360);
+  return focalPx * mmPerPx;
+}
+
+/**
+ * Eyes looking at a screen `viewingMm` away turn inward, so the camera sees
+ * the near PD. Each pupil lies on the line from its centre of rotation to the
+ * screen, so near = distance * d / (d + r): this returns (d + r) / d, the
+ * factor that gives the distance PD a prescription states.
+ */
+export function convergenceFactor(viewingMm, eyeRotationMm = DEFAULT_EYE_ROTATION_MM) {
+  if (!(viewingMm > 0) || !(eyeRotationMm > 0)) return 1;
+  // Nobody holds a screen nearer than this; keeps a bad estimate harmless.
+  const d = Math.max(viewingMm, 200);
+  return (d + eyeRotationMm) / d;
+}
+
+/**
  * One frame's raw measurements (mm). `mmPerPx` is the metric scale to use:
  * from the iris ruler, or from a manually entered PD (more accurate).
+ * `convergence` (see convergenceFactor) turns the near PDs seen by the camera
+ * into distance PDs; `nearPd` keeps the PD as seen, for drawing.
  */
-export function measureFrame(P, basis, mmPerPx, { earOffsetMm = 10 } = {}) {
+export function measureFrame(P, basis, mmPerPx, { earOffsetMm = 10, convergence = 1 } = {}) {
   // PD as an optician measures it: horizontal distance between the vertical
   // lines through each pupil centre (projected on the head's horizontal axis).
   const rp = P[LM.RIGHT_IRIS_CENTER];
   const lp = P[LM.LEFT_IRIS_CENTER];
   const nose = P[LM.SELLION];
   const h = faceHorizontalAxis(P);
-  const pd = Math.abs(dot(sub(lp, rp), h)) * mmPerPx;
+  const nearPd = Math.abs(dot(sub(lp, rp), h)) * mmPerPx;
+  const pd = nearPd * convergence;
   // Monocular PD: each pupil to the nose-bridge centre line.
-  const monoPdRight = Math.abs(dot(sub(nose, rp), h)) * mmPerPx;
-  const monoPdLeft = Math.abs(dot(sub(lp, nose), h)) * mmPerPx;
+  const monoPdRight = Math.abs(dot(sub(nose, rp), h)) * mmPerPx * convergence;
+  const monoPdLeft = Math.abs(dot(sub(lp, nose), h)) * mmPerPx * convergence;
   const faceWidth = dist(P[LM.FACE_RIGHT], P[LM.FACE_LEFT]) * mmPerPx;
   const noseBridge = dist(P[LM.NOSE_PAD_RIGHT], P[LM.NOSE_PAD_LEFT]) * mmPerPx;
   // Depth from the nose bridge back to the ear, along the head's forward axis.
@@ -119,7 +150,7 @@ export function measureFrame(P, basis, mmPerPx, { earOffsetMm = 10 } = {}) {
   const dR = dot(sub(s, P[LM.FACE_RIGHT]), basis.z);
   const dL = dot(sub(s, P[LM.FACE_LEFT]), basis.z);
   const frontToEar = ((dR + dL) / 2) * mmPerPx + earOffsetMm;
-  return { pd, monoPdRight, monoPdLeft, faceWidth, noseBridge, frontToEar };
+  return { pd, nearPd, monoPdRight, monoPdLeft, faceWidth, noseBridge, frontToEar };
 }
 
 /**
@@ -147,7 +178,9 @@ export function median(arr) {
 export class MeasurementAggregator {
   constructor(size = 45) {
     this.size = size;
-    this.buf = { pd: [], monoPdRight: [], monoPdLeft: [], faceWidth: [], noseBridge: [], frontToEar: [] };
+    this.buf = {
+      pd: [], nearPd: [], monoPdRight: [], monoPdLeft: [], faceWidth: [], noseBridge: [], frontToEar: [],
+    };
   }
   push(m) {
     for (const k of Object.keys(this.buf)) {

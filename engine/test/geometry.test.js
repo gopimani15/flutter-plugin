@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   LM, toScene, headBasis, headAngles, irisDiameterPx, measureFrame,
   glassesPlacement, MeasurementAggregator, median, dot, sub, len,
+  viewingDistanceMm, convergenceFactor,
 } from '../src/geometry.js';
 
 const W = 1280;
@@ -121,4 +122,30 @@ test('measurements lock only once enough samples agree', () => {
   const noisy = new MeasurementAggregator(45);
   for (let i = 0; i < 45; i++) noisy.push({ pd: 63 + (i % 2 ? 2 : -2) });
   assert.equal(noisy.isStable(45, 0.6), false, 'too noisy');
+});
+
+test('viewing distance follows the iris scale and the field of view', () => {
+  // 1280x720 at 75 deg diagonal: focal ~ 958 px; 4 px/mm at the eyes -> ~240 mm.
+  const d = viewingDistanceMm(1 / PX_PER_MM, W, H, 75);
+  near(d, Math.hypot(W, H) / 2 / Math.tan((37.5 * Math.PI) / 180) / PX_PER_MM, 1e-9, 'distance');
+  near(viewingDistanceMm(0.5, W, H, 75), 2 * viewingDistanceMm(0.25, W, H, 75), 1e-9, 'linear in scale');
+});
+
+test('near PD at the screen becomes the distance PD', () => {
+  // Pupils 11 mm in front of their rotation centres, 65 mm apart, turned to a
+  // point 350 mm ahead: they sit 65 * 350 / 361 apart.
+  const nearPd = (65 * 350) / 361;
+  near(nearPd * convergenceFactor(350, 11), 65, 1e-9, 'distance pd');
+  assert.equal(convergenceFactor(350, 0), 1, 'off');
+  assert.equal(convergenceFactor(NaN, 11), 1, 'no distance');
+  near(convergenceFactor(50, 11), 211 / 200, 1e-12, 'clamped near');
+});
+
+test('measureFrame reports distance PDs and keeps the near PD', () => {
+  const P = toLandmarks(syntheticFace({ pd: 62 })).map((p) => toScene(p, W, H));
+  const m = measureFrame(P, headBasis(P), 1 / PX_PER_MM, { convergence: 1.05 });
+  near(m.nearPd, 62, 1e-6, 'near');
+  near(m.pd, 62 * 1.05, 1e-6, 'distance');
+  near(m.monoPdRight + m.monoPdLeft, m.pd, 1e-6, 'monos add up');
+  near(m.faceWidth, 140, 1e-6, 'face width unchanged');
 });
